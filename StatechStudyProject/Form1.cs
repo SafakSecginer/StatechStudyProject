@@ -52,7 +52,7 @@ namespace StatechStudyProject
                     
                     foreach (DataGridViewRow row in dataGridView1.Rows)
                     {
-                        new Thread(() => dataGridView1.Invalidate());
+                        
                         if (data.Price.Equals(row.Cells[(int)gridViewColumns.Fiyat].Value))
                         {
                             
@@ -70,6 +70,8 @@ namespace StatechStudyProject
                                     var found = Constants.dataGridList.FirstOrDefault(c => c.Fiyat == data.Price);
                                     found.Satýþ = data.AskQuantity;
 
+                                    //new Thread(() => dataGridView1.Invalidate());
+
                                     Constants.updatedDataIndex++;
 
                                 }
@@ -85,6 +87,8 @@ namespace StatechStudyProject
                                     var found = Constants.dataGridList.FirstOrDefault(c => c.Fiyat == data.Price);
                                     found.Alýþ = data.BidQuantity;
 
+                                    //new Thread(() => dataGridView1.Invalidate());
+
                                     Constants.updatedDataIndex++;
 
                                     //row.Cells[(int)gridViewColumns.Alýþ].Value = data.BidQuantity;
@@ -96,9 +100,10 @@ namespace StatechStudyProject
                         
                     }
                     }
-                }
+                
+            }
             catch { }
-
+            new Thread(() => dataGridView1.Invalidate());
         }
 
     }
