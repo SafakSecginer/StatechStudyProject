@@ -99,10 +99,17 @@ namespace StatechStudyProject
 
         private void btnViewDataTable_Click(object sender, EventArgs e)
         {
+            Thread thread = new Thread(CreateNewFormInstance);
+            thread.Start();
+        }
+
+        private void CreateNewFormInstance()
+        {
             Form1 newForm = new Form1();
             RefreshDatas(newForm);
-            newForm.Show();
+            newForm.ShowDialog();
         }
+
         private void RefreshDatas(Form1 newForm)
         {
             var bindingSource1 = new System.Windows.Forms.BindingSource { DataSource = Constants.dataGridList };

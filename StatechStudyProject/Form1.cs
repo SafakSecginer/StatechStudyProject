@@ -49,15 +49,13 @@ namespace StatechStudyProject
             {
                 foreach (DataModel data in Constants.streamDataList)
                 {
-                    dataGridView1.Invalidate();
+                    
                     foreach (DataGridViewRow row in dataGridView1.Rows)
                     {
-                        dataGridView1.Invalidate();
+                        new Thread(() => dataGridView1.Invalidate());
                         if (data.Price.Equals(row.Cells[(int)gridViewColumns.Fiyat].Value))
                         {
                             
-                            
-
                             if (localUpdatedDataIndex >= Constants.updatedDataIndex)
                             {
                                 if (!data.AskQuantity.Equals("0"))
