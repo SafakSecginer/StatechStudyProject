@@ -1,25 +1,27 @@
 using Microsoft.VisualBasic;
 using StatechStudyProject.Models;
 using System.CodeDom;
+using System.Collections.Generic;
+using System.Threading;
+using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
+using static System.Windows.Forms.DataFormats;
 
 namespace StatechStudyProject
 {
     public partial class Form1 : Form
     {
-        static string resourcesPath = @"..\..\..\Resources\";
-        string initialDataPath = Path.Combine(Environment.CurrentDirectory, resourcesPath, "InitialData.csv");
-        string streamDataPath = Path.Combine(Environment.CurrentDirectory, resourcesPath, "StreamData.csv");
+
         private Thread thread;
-        private List<DataModel> streamDataList;
-        
+        private int localUpdatedDataIndex = 0;
+
         enum gridViewColumns
         {
             Alýþ,
             Fiyat,
             Satýþ
         };
-        
+
         public Form1()
         {
             InitializeComponent();
@@ -27,8 +29,6 @@ namespace StatechStudyProject
         
         private void Form1_Load(object sender, EventArgs e)
         {
-            LoadInitialData();
-            streamDataList = LoadStreamCSV(streamDataPath);
             CreateThread();
         }
 
@@ -43,100 +43,64 @@ namespace StatechStudyProject
         {
             System.Diagnostics.Debug.WriteLine("Stream Data Thread is Running...");
 
-            dataGridView1.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            //dataGridView1.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
 
             try
             {
-                foreach (DataModel data in streamDataList)
+                foreach (DataModel data in Constants.streamDataList)
                 {
-                    System.Diagnostics.Debug.WriteLine(data.Price);
+                    dataGridView1.Invalidate();
                     foreach (DataGridViewRow row in dataGridView1.Rows)
                     {
+                        dataGridView1.Invalidate();
                         if (data.Price.Equals(row.Cells[(int)gridViewColumns.Fiyat].Value))
                         {
-                            if (!data.AskQuantity.Equals("0"))
+                            
+                            
+
+                            if (localUpdatedDataIndex >= Constants.updatedDataIndex)
                             {
-                                Thread.Sleep(Int32.Parse(data.TimeDifference));
-                                row.Cells[(int)gridViewColumns.Satýþ].Value = data.AskQuantity;
-                            } else if (!data.BidQuantity.Equals("0"))
-                            {
-                                Thread.Sleep(Int32.Parse(data.TimeDifference));
-                                row.Cells[(int)gridViewColumns.Alýþ].Value = data.BidQuantity;
+                                if (!data.AskQuantity.Equals("0"))
+                                {
+                                    
+                                    row.Cells[(int)gridViewColumns.Satýþ].Style.BackColor = Color.Gray;
+
+                                    Thread.Sleep(Int32.Parse(data.TimeDifference));
+
+                                    row.Cells[(int)gridViewColumns.Satýþ].Style.BackColor = Color.White;
+
+                                    var found = Constants.dataGridList.FirstOrDefault(c => c.Fiyat == data.Price);
+                                    found.Satýþ = data.AskQuantity;
+
+                                    Constants.updatedDataIndex++;
+
+                                }
+                                else if (!data.BidQuantity.Equals("0"))
+                                {
+                                    
+                                    row.Cells[(int)gridViewColumns.Alýþ].Style.BackColor = Color.Gray;
+
+                                    Thread.Sleep(Int32.Parse(data.TimeDifference));
+
+                                    row.Cells[(int)gridViewColumns.Alýþ].Style.BackColor = Color.White;
+
+                                    var found = Constants.dataGridList.FirstOrDefault(c => c.Fiyat == data.Price);
+                                    found.Alýþ = data.BidQuantity;
+
+                                    Constants.updatedDataIndex++;
+
+                                    //row.Cells[(int)gridViewColumns.Alýþ].Value = data.BidQuantity;
+
+                                }
                             }
+                            localUpdatedDataIndex++;
                         }
+                        
+                    }
                     }
                 }
-            }
             catch { }
 
-        }
-
-        private void LoadInitialData()
-        {
-            List<DataGridModel> dataGridList = LetDataListToSnapshot(LoadInitializeCSV(initialDataPath));
-            dataGridView1.DataSource = dataGridList;
-        }
-
-        public List<DataModel> LoadInitializeCSV(string csvFile)
-        {
-            var query = from line in File.ReadLines(csvFile).Skip(1)
-                        let data = line.Split(";")
-                        select new DataModel
-                        {
-                            Price = data[0],
-                            Side = data[1],
-                            Quantity = data[2]
-                        };
-            return query.ToList();
-        }
-
-        public List<DataModel> LoadStreamCSV(string csvFile)
-        {
-            var query = from line in File.ReadLines(csvFile).Skip(1)
-                        let data = line.Split(";")
-                        select new DataModel
-                        {
-                            TimeDifference = data[0],
-                            BidQuantity = data[1],
-                            AskQuantity = data[2],
-                            Price = data[3]
-                        };
-            return query.ToList();
-
-        }
-
-        public List<DataGridModel> LetDataListToSnapshot(List<DataModel> dataModelList)
-        {
-            var query1 = from data in dataModelList
-                         from side in data.Side
-                         where side == 'S'
-                         select new DataGridModel
-                         {
-                             Alýþ = "",
-                             Fiyat = data.Price,
-                             Satýþ = data.Quantity
-                         };
-
-            var query2 = from data in dataModelList
-                         from side in data.Side
-                         where side == 'B'
-                         select new DataGridModel
-                         {
-                             Alýþ = data.Quantity,
-                             Fiyat = data.Price,
-                             Satýþ = ""
-                         };
-            
-            List<DataGridModel> sList = query1.ToList<DataGridModel>();
-            List<DataGridModel> bList = query2.ToList<DataGridModel>();
-            sList.AddRange(bList);
-            return sList;
-        }
-
-        private void btnNewForm_Click(object sender, EventArgs e)
-        {
-            Form newForm = new Form1();
-            newForm.Show();
         }
 
     }
